@@ -51,8 +51,11 @@ class TSDFVol(object):
         self.voxels[self.voxels > self.trunc_dist] = self.trunc_dist
         self.voxels[self.voxels < -self.trunc_dist] = -self.trunc_dist
         self.voxels /= self.trunc_dist
+        # Tresholding to remove / (set to 0) / voxels to far away from the objects' surface
+        self.voxels[self.voxels > 0.98] = -1.
+        self.voxels[self.voxels < -0.98] = -1.
+
         self.voxels = (self.voxels + 1) * 0.5
-        print('nn')
 
 
     def load_obj(self, obj_root):
@@ -113,18 +116,19 @@ class Visualization_Rviz(object):
         scale = [scale, 0.0, 0.0]
         color = [0.5, 0.5, 0.5]
         msg = utils.create_marker_msg(marker_type=Marker.LINE_LIST, frame="voxel_grid_origin", pose=pose, scale=scale, color=color)
-        msg.points = [utils.to_point_msg(point) for point in utils.workspace_lines(dst=size)]
+        msg.points = [utils.to_point_msg(point) for point in utils.workspace_lines(dst=0.3)]
 
-        while not rospy.is_shutdown():
-            print()
-            self.publishers["workspace"].publish(msg)
-            # Set publish-rate to 10 Hz
-            rospy.sleep(0.1)
+        self.publishers["workspace"].publish(msg)
+        # Set publish-rate to 10 Hz
+        rospy.sleep(0.1)
 
-    def draw_tsdf(self, vol, voxel_size, threshold=0.01):
+    def draw_tsdf(self, vol, voxel_size=0.0075, threshold=0.01):
         print('Input Draw TSDF - Volume and Voxelsize: ', vol, voxel_size)
+        vol = vol[:20,:,:]
         msg = utils.create_vol_msg(vol, voxel_size, threshold)
-        self.publishers["tsdf"].publish(msg)
+        while not rospy.is_shutdown():
+            self.publishers["tsdf"].publish(msg)
+            rospy.sleep(0.1)
 
 
 
@@ -136,7 +140,7 @@ def main(args):
         visualization = Visualization_Rviz()
         visualization.clear()
         visualization.draw_workspace()
-        visualization.draw_tsdf()
+        visualization.draw_tsdf(tsdf_vol.voxels)
 
 
 

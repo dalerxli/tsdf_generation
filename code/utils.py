@@ -146,6 +146,12 @@ def create_marker_msg(marker_type, frame, pose, scale, color):
     msg.color = to_color_msg(color)
     return msg
 
+def create_vol_msg(vol, voxel_size=0.0075, threshold=0.01):
+    vol = vol.squeeze()
+    points = np.argwhere(vol > threshold) * voxel_size
+    values = np.expand_dims(vol[vol > threshold], 1)
+    return to_cloud_msg(points, values, frame="voxel_grid_origin")
+
 class Rotation(scipy.spatial.transform.Rotation):
     @classmethod
     def identity(cls):
