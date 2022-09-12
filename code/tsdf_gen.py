@@ -26,36 +26,32 @@ from visualization_msgs.msg import Marker, MarkerArray
 import scipy
 import std_msgs.msg, tf2_ros
 import open3d as o3d
+from vgn_utils import VGN
 
 
 class TSDFVol(object):
-    def __init__(self, object='Ketchup'):
+    def __init__(self, object='Ketchup_cm'):
         voxel_res = 40
+        workspace = 0.3                     # Unit [m]
         surface_point_method = 'scan'
         sign_method = 'normal'
         scan_count = 100
         scan_res = 400
         sample_point_count = 1e6
         return_grad = False
+        # Truncation Distance adjustable: default = 4 * VoxelSize
+        self.voxel_size = workspace / voxel_res
+        self.trunc_dist = 4 * self.voxel_size
 
 
-        self.obj_root = '/home/nleuze/tsdf_generation/data/hope_meshes_eval/' + object + '.obj'
+        self.obj_root = '/home/nico/tsdf_generation/data/hope_meshes_eval/' + object + '.obj'
         self.mesh = self.load_obj(obj_root=self.obj_root)
         bbox = self.mesh.bounding_box.bounds
         centroid_bbox = (bbox[0] + bbox[1]) / 2
         # scale = (bbox[1] - bbox[0]).max()
 
         self.voxels = self.voxelize(voxel_res, scan_count, sign_method, surface_point_method, return_grad, scan_res, sample_point_count)
-        # self.voxels = (self.voxels + 1) * 0.5
-        self.trunc_dist = (0.3 / 40) * 4
-        self.voxels[self.voxels > self.trunc_dist] = self.trunc_dist
-        self.voxels[self.voxels < -self.trunc_dist] = -self.trunc_dist
-        self.voxels /= self.trunc_dist
-        # Tresholding to remove / (set to 0) / voxels to far away from the objects' surface
-        self.voxels[self.voxels > 0.98] = -1.
-        self.voxels[self.voxels < -0.98] = -1.
-
-        self.voxels = (self.voxels + 1) * 0.5
+        self.truncate_sdf(self.trunc_dist)
 
 
     def load_obj(self, obj_root):
@@ -65,6 +61,17 @@ class TSDFVol(object):
         return mesh_to_voxels(self.mesh, voxel_resolution=voxel_res, check_result=False, scan_count=scan_count,
                                      sign_method=sign_method, surface_point_method=surface_point_method, return_gradients=return_grad,
                                      scan_resolution=scan_res, sample_point_count=sample_point_count)
+
+    def truncate_sdf(self, trunc_dist):
+
+        self.voxels[self.voxels > trunc_dist] = trunc_dist
+        self.voxels[self.voxels < -trunc_dist] = -trunc_dist
+        self.voxels /= trunc_dist
+        # Tresholding to remove / (set to 0 > no visualization) / voxels to far away from the objects' surface
+        self.voxels[self.voxels > 0.98] = -1.
+        self.voxels[self.voxels < -0.98] = -1.
+
+        self.voxels = (self.voxels + 1) * 0.5
 
 
 
@@ -123,24 +130,29 @@ class Visualization_Rviz(object):
         rospy.sleep(0.1)
 
     def draw_tsdf(self, vol, voxel_size=0.0075, threshold=0.01):
-        print('Input Draw TSDF - Volume and Voxelsize: ', vol, voxel_size)
-        vol = vol[:20,:,:]
+        # vol = vol[:20,:,:]
         msg = utils.create_vol_msg(vol, voxel_size, threshold)
-        while not rospy.is_shutdown():
+        '''while not rospy.is_shutdown():
             self.publishers["tsdf"].publish(msg)
-            rospy.sleep(0.1)
+            rospy.sleep(0.1)'''
+        self.publishers["tsdf"].publish(msg)
 
 
 
 def main(args):
     tsdf_vol = TSDFVol(args.object)
     print(tsdf_vol.voxels.shape, np.amax(tsdf_vol.voxels), np.amin(tsdf_vol.voxels), np.expand_dims(tsdf_vol.voxels, axis=0).shape)
+    print(tsdf_vol.voxel_size)
 
     if args.viz == True:
         visualization = Visualization_Rviz()
         visualization.clear()
         visualization.draw_workspace()
         visualization.draw_tsdf(tsdf_vol.voxels)
+
+    # Initiate Grasping Prediction based on VGN network
+    grasp_predictor = VGN()
+    grasps, scores, timing = grasp_predictor(tsdf_vol.voxels, tsdf_vol.voxel_size)
 
 
 
