@@ -40,15 +40,15 @@ class Visualization_Rviz(object):
 
     def clear(self):
         self.publishers["workspace"].publish(self.DELETE_MARKER_MSG)
-        self.publishers["tsdf"].publish(utils.to_cloud_msg(np.array([]), frame="task"))
-        self.publishers["points"].publish(utils.to_cloud_msg(np.array([]), frame="task"))
+        self.publishers["tsdf"].publish(utils.to_cloud_msg(np.array([]), frame="voxel_grid_origin"))
+        self.publishers["points"].publish(utils.to_cloud_msg(np.array([]), frame="voxel_grid_origin"))
         self.clear_quality()
         self.publishers["grasp"].publish(self.DELETE_MARKER_ARRAY_MSG)
         self.clear_grasps()
-        self.publishers["debug"].publish(utils.to_cloud_msg(np.array([]), frame="task"))
+        self.publishers["debug"].publish(utils.to_cloud_msg(np.array([]), frame="voxel_grid_origin"))
 
     def clear_quality(self):
-        self.publishers["quality"].publish(utils.to_cloud_msg(np.array([]), frame="task"))
+        self.publishers["quality"].publish(utils.to_cloud_msg(np.array([]), frame="voxel_grid_origin"))
 
     def clear_grasps(self):
         self.publishers["grasps"].publish(self.DELETE_MARKER_ARRAY_MSG)

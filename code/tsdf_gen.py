@@ -39,7 +39,7 @@ class TSDFVol(object):
         return_grad = False
         # Truncation Distance adjustable: default = 4 * VoxelSize
         self.voxel_size = workspace / voxel_res
-        self.trunc_dist = 4 * self.voxel_size
+        self.trunc_dist = 8 * self.voxel_size
 
 
         self.obj_root = '/home/nleuze/tsdf_generation/data/thesis_test_objects/' + object + '.obj'
@@ -54,7 +54,7 @@ class TSDFVol(object):
         # vertices, faces, normals, _ = skimage.measure.marching_cubes(self.voxels, level=0)
         # reconstructed_mesh = trimesh.Trimesh(vertices=vertices, faces=faces, vertex_normals=normals)
         # reconstructed_mesh.show()
-        
+
         self.truncate_sdf(self.trunc_dist)
 
 
@@ -84,6 +84,8 @@ def main(args):
     tsdf_vol = TSDFVol(args.object)
     print(tsdf_vol.voxels.shape, np.amax(tsdf_vol.voxels), np.amin(tsdf_vol.voxels), np.expand_dims(tsdf_vol.voxels, axis=0).shape)
     print(tsdf_vol.voxel_size)
+    tsdf_vol_64 = np.float64(tsdf_vol.voxels)
+    np.save('/home/nleuze/tsdf_vol.npy', tsdf_vol_64)
 
     if args.viz == True:
         visualization_ = visualization.Visualization_Rviz()
@@ -101,9 +103,11 @@ def main(args):
     else:
         print('No sensible gripping configurations could be found. ')
 
-    print(type(grasps))
-    print()
-
+    print(scores)
+    ########################
+    # Postprocessing Grasps:
+    ########################
+    tsdf_vol
 
 
 
