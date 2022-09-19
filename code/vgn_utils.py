@@ -143,7 +143,7 @@ def select(qual_vol, rot_vol, width_vol, threshold=0.50, max_filter_size=3):
     qual_vol = np.where(qual_vol == max_vol, qual_vol, 0.0)
 
     # Test for Transformation:
-    qual_vol[0, 0, 0] = 0.97
+    qual_vol[0, 0, 0] = 0.51
     # qual_vol[1, 1, 1] = 0.97
     # qual_vol[2, 2, 2] = 0.97
     mask = np.where(qual_vol, 1.0, 0.0)

@@ -107,6 +107,7 @@ def from_quat_msg(msg):
 def to_pose_msg(transform):
     """Convert a `Transform` object to a Pose message."""
     # x = transform[0].as_quat()
+    print(transform)
     msg = geometry_msgs.msg.Pose()
     msg.position = to_point_msg(transform[1])
     msg.orientation = to_quat_msg(transform[0])
@@ -143,6 +144,7 @@ def create_marker_msg(marker_type, frame, pose, scale, color):
     msg.header.stamp = rospy.Time()
     msg.type = marker_type
     msg.action = Marker.ADD
+    print('Pose - to_posemsg: ', pose)
     msg.pose = to_pose_msg(pose)
     msg.scale = to_vector3_msg(scale)
     msg.color = to_color_msg(color)

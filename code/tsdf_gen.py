@@ -22,8 +22,10 @@ import time
 import numpy as np
 import utils
 import rospy
+from geometry_msgs.msg import Pose
 from vgn_utils import VGN
 import visualization
+import transformation_robot
 
 
 
@@ -84,8 +86,8 @@ def main(args):
     tsdf_vol = TSDFVol(args.object)
     print(tsdf_vol.voxels.shape, np.amax(tsdf_vol.voxels), np.amin(tsdf_vol.voxels), np.expand_dims(tsdf_vol.voxels, axis=0).shape)
     print(tsdf_vol.voxel_size)
-    tsdf_vol_64 = np.float64(tsdf_vol.voxels)
-    np.save('/home/nleuze/tsdf_vol.npy', tsdf_vol_64)
+    # tsdf_vol_64 = np.float64(tsdf_vol.voxels)
+    # np.save('/home/nleuze/tsdf_vol.npy', tsdf_vol_64)
 
     if args.viz == True:
         visualization_ = visualization.Visualization_Rviz()
@@ -103,11 +105,25 @@ def main(args):
     else:
         print('No sensible gripping configurations could be found. ')
 
-    print(scores)
     ########################
     # Postprocessing Grasps:
     ########################
-    tsdf_vol
+    fav_grasp_idx = np.argmax(scores)
+    fav_grasp = [grasps[fav_grasp_idx]]
+    grasp_pose_pub = rospy.Publisher('/grasp_pose_wrt_voxelgrid_origin', Pose, queue_size=100)
+    grasp_msg = Pose()
+    grasp_msg.position.x, grasp_msg.position.y, grasp_msg.position.z = fav_grasp[0].pose.translation
+    grasp_msg.orientation.x, grasp_msg.orientation.y, grasp_msg.orientation.z, grasp_msg.orientation.w = fav_grasp[
+        0].pose.rotation.as_quat()
+    maximize_score_fav_grasp = np.asarray(1.0, dtype=np.float32)
+    rospy.sleep(5)
+    visualization_.draw_grasps(grasps=fav_grasp, scores=maximize_score_fav_grasp, finger_depth=0.05)
+    for i in range(5):
+        grasp_pose_pub.publish(grasp_msg)
+        rospy.sleep(0.5)
+
+    transformed_pose = transformation_robot.Transformation_Grasp(fav_grasp)
+    print('')
 
 
 

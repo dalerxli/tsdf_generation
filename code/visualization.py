@@ -83,9 +83,52 @@ class Visualization_Rviz(object):
 
     def draw_grasps(self, grasps, scores, finger_depth):
         markers = []
-        for i, (grasp, score) in enumerate(zip(grasps, scores)):
-            msg = utils.create_grasp_marker_msg(grasp, score, finger_depth)
-            msg.id = i
+        print(len(grasps))
+        if len(grasps) > 1:
+            for i, (grasp, score) in enumerate(zip(grasps, scores)):
+                msg = utils.create_grasp_marker_msg(grasp, score, finger_depth)
+                msg.id = i
+                markers.append(msg)
+        else:
+            msg = utils.create_grasp_marker_msg(grasps[0], scores, finger_depth)
             markers.append(msg)
         msg = MarkerArray(markers=markers)
         self.publishers["grasps"].publish(msg)
+
+    def draw_grasp(self, grasp, score, finger_depth):
+        radius = 0.1 * finger_depth
+        w, d = grasp.width, finger_depth
+        color = [1.0, 0.0, 1.0]
+
+        markers = []
+
+        # left finger
+        pose = grasp.pose * utils.Transform(utils.Rotation.identity(), [0.0, -w / 2, d / 2])
+        scale = [radius, radius, d]
+        msg = utils.create_marker_msg(Marker.CYLINDER, "voxel_grid_origin", pose, scale, color)
+        msg.id = 0
+        markers.append(msg)
+
+        # right finger
+        pose = grasp.pose * utils.Transform(utils.Rotation.identity(), [0.0, w / 2, d / 2])
+        scale = [radius, radius, d]
+        msg = utils.create_marker_msg(Marker.CYLINDER, "voxel_grid_origin", pose, scale, color)
+        msg.id = 1
+        markers.append(msg)
+
+        # wrist
+        pose = grasp.pose * utils.Transform(utils.Rotation.identity(), [0.0, 0.0, -d / 4])
+        scale = [radius, radius, d / 2]
+        msg = utils.create_marker_msg(Marker.CYLINDER, "voxel_grid_origin", pose, scale, color)
+        msg.id = 2
+        markers.append(msg)
+
+        # palm
+        pose = grasp.pose *  utils.Transform(utils.Rotation.from_rotvec(np.pi / 2 * np.r_[1.0, 0.0, 0.0]), [0.0, 0.0, 0.0]
+        )
+        scale = [radius, radius, w]
+        msg = utils.create_marker_msg(Marker.CYLINDER, "voxel_grid_origin", pose, scale, color)
+        msg.id = 3
+        markers.append(msg)
+
+        self.publishers["grasp"].publish(MarkerArray(markers=markers))
