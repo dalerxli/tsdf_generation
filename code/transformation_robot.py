@@ -25,7 +25,7 @@ class Transformation_Grasp(object):
                                                   rospy.Duration(4.0))
         self.trafo_centroid_origin = self.listener_centroid_origin.lookupTransform('/centroid_voxel_grid', '/voxel_grid_origin',
                                                                          rospy.Time(0))
-        print(self.trafo_origin_centroid)
+        # print(self.trafo_centroid_origin)
         self.pose_voxelorigin_grasp = vgn_grasp[0]
         self.pose_voxelorigin_grasp_t = self.pose_voxelorigin_grasp.pose.translation
         self.pose_voxelorigin_grasp_r = self.pose_voxelorigin_grasp.pose.rotation.as_quat()

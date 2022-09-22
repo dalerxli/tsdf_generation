@@ -116,15 +116,10 @@ def select(qual_vol, rot_vol, width_vol, threshold=0.50, max_filter_size=3):
     # grasps, scores = select(qual_vol.copy(), rot_vol, width_vol)
     # fig = plt.figure()
     qual_vol_hist = np.reshape(qual_vol, (1, 64000))
-    '''plt.hist(qual_vol_hist)
-    plt.title('Distribution of Quality Scores')
-    plt.xlabel('Quality Score')
-    plt.ylabel('Occurrence')'''
-    # plt.show()
 
     qual_vol[qual_vol < threshold] = 0.0
-    qual_64 = np.float64(qual_vol)
-    np.save('/home/nleuze/qual_vol_k3.npy', qual_64)
+    # qual_64 = np.float64(qual_vol)
+    # np.save('/home/nleuze/qual_vol_k3.npy', qual_64)
 
 
     # non maximum suppression
@@ -136,14 +131,12 @@ def select(qual_vol, rot_vol, width_vol, threshold=0.50, max_filter_size=3):
     # max_img = max_vol[20, :, :]
     # qual_img = qual_vol[20, :, :]
     nms_img = np.where(qual_vol == max_vol, qual_vol, 0.0)
-    nms_64 = np.float64(nms_img)
-    # np.save('/home/nleuze/nms_vol_k3.npy', nms_64)
-    print()
+    # nms_64 = np.float64(nms_img)
 
     qual_vol = np.where(qual_vol == max_vol, qual_vol, 0.0)
 
     # Test for Transformation:
-    qual_vol[0, 0, 0] = 0.51
+    # qual_vol[0, 0, 0] = 0.51
     # qual_vol[1, 1, 1] = 0.97
     # qual_vol[2, 2, 2] = 0.97
     mask = np.where(qual_vol, 1.0, 0.0)

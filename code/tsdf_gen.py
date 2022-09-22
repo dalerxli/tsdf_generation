@@ -41,7 +41,7 @@ class TSDFVol(object):
         return_grad = False
         # Truncation Distance adjustable: default = 4 * VoxelSize
         self.voxel_size = workspace / voxel_res
-        self.trunc_dist = 8 * self.voxel_size
+        self.trunc_dist = 4 * self.voxel_size
 
 
         self.obj_root = '/home/nleuze/tsdf_generation/data/thesis_test_objects/' + object + '.obj'
@@ -108,6 +108,7 @@ def main(args):
     ########################
     # Postprocessing Grasps:
     ########################
+    print('Scores of Grasps: ', scores)
     fav_grasp_idx = np.argmax(scores)
     fav_grasp = [grasps[fav_grasp_idx]]
     grasp_pose_pub = rospy.Publisher('/grasp_pose_wrt_voxelgrid_origin', Pose, queue_size=100)
@@ -118,11 +119,11 @@ def main(args):
     maximize_score_fav_grasp = np.asarray(1.0, dtype=np.float32)
     rospy.sleep(5)
     visualization_.draw_grasps(grasps=fav_grasp, scores=maximize_score_fav_grasp, finger_depth=0.05)
-    for i in range(5):
+    while True:
         grasp_pose_pub.publish(grasp_msg)
         rospy.sleep(0.5)
 
-    transformed_pose = transformation_robot.Transformation_Grasp(fav_grasp)
+    # transformed_pose = transformation_robot.Transformation_Grasp(fav_grasp)
     print('')
 
 
@@ -131,7 +132,7 @@ def main(args):
 if __name__ == '__main__':
     print('Starting TSDF-Generation at {}\n'.format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     parser = argparse.ArgumentParser()
-    parser.add_argument('--object', type=str, default='Ketchup_cm_y2')
+    parser.add_argument('--object', type=str, default='sugar_cm_z')
     parser.add_argument("--viz", action="store_true", default=True)
     args = parser.parse_args()
     main(args)
